@@ -7,15 +7,14 @@ This is the Datasheet for the particular IC that is used on the Sparkfun Load-Ce
 
 
 ## Interface Description
-
+### Details
 - Supply Voltage: 2.6 - 5.5V
-
-XI = 0: On-Chip Oscillator
-RATE = 0: 10Hz Signal
+- XI = 0: On-Chip Oscillator
+- RATE = 0: 10Hz Signal
 
 - Data is signed 2's complement 24 bit (TO BE TESTED: Negative numbers?)
 
-- Serial interface:
+### Serial interface:
   - Clock Signal (IN)
     - Minimum frequency is 20 kHz (If 0.5 duty cycle is used)
     - Default frequency is 500 kHz
