@@ -4,6 +4,7 @@
 #include <driver/timer.h>
 
 // We have to declare this static here so that we can declare it as 'friend' inside the class definition.
+static void IRAM_ATTR dataISR(void *that);
 static void IRAM_ATTR clkISR(void *that);
 
 class LoadCellAmp : LoadCellAmpCommon<gpio_num_t>{
@@ -34,5 +35,6 @@ class LoadCellAmp : LoadCellAmpCommon<gpio_num_t>{
   void init(timer_group_t timer_group, timer_idx_t timer_idx);
   inline void toggleClkOutput();
 
+  friend void IRAM_ATTR dataISR(void *that);
   friend void IRAM_ATTR clkISR(void *that);
 };

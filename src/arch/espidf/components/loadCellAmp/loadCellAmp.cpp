@@ -42,12 +42,6 @@ static void IRAM_ATTR clkISR(void* params){
 
 // Whenever we arent reading and receive a negative edge, data is available
 static void IRAM_ATTR dataISR(void* params){
-  LoadCellAmp *that = static_cast<LoadCellAmp*>(params);
-  that->toggleClkOutput();
-	that->timer_counter += 1;
-
-  timer_group_clr_intr_status_in_isr(that->timer_group, that->timer_idx);
-	timer_group_enable_alarm_in_isr(that->timer_group, that->timer_idx);
 }
 
 // Hardware Setup ==============================================================================================
