@@ -1,5 +1,21 @@
 #include "include/loadCellAmp.h"
 
+
+// Constructors ================================================================================================
+// =============================================================================================================
+LoadCellAmp::LoadCellAmp(gpio_num_t dout_pin, gpio_num_t sp_clk_pin) : LoadCellAmpCommon<gpio_num_t>(dout_pin, sp_clk_pin) {
+  init(TIMER_GROUP_0, TIMER_0);
+};
+
+LoadCellAmp::LoadCellAmp(gpio_num_t dout_pin, 
+    gpio_num_t sp_clk_pin, 
+    timer_group_t timer_group,
+    timer_idx_t timer_idx) : LoadCellAmpCommon<gpio_num_t>(dout_pin, sp_clk_pin) {
+  init(timer_group, timer_idx);
+};
+// Private Members  ============================================================================================
+// =============================================================================================================
+
 void LoadCellAmp::init(timer_group_t timer_group, timer_idx_t timer_idx){
   this->timer_group = timer_group;
   this->timer_idx = timer_idx;
@@ -7,6 +23,13 @@ void LoadCellAmp::init(timer_group_t timer_group, timer_idx_t timer_idx){
   setupGPIO();
   setupDataTimer();
 }
+
+inline void LoadCellAmp::toggleClkOutput(){
+  gpio_set_level(this->sp_clk_pin, this->timer_counter % 2);
+}
+
+// ISR Setup ===================================================================================================
+// =============================================================================================================
 
 static void IRAM_ATTR dataISR(void* params){
   LoadCellAmp *that = static_cast<LoadCellAmp*>(params);
@@ -17,9 +40,8 @@ static void IRAM_ATTR dataISR(void* params){
 	timer_group_enable_alarm_in_isr(that->timer_group, that->timer_idx);
 }
 
-inline void LoadCellAmp::toggleClkOutput(){
-  gpio_set_level(this->sp_clk_pin, this->timer_counter % 2);
-}
+// Hardware Setup ==============================================================================================
+// =============================================================================================================
 
 void LoadCellAmp::setupGPIO(){
   gpio_config_t io_conf;
@@ -51,3 +73,6 @@ void LoadCellAmp::setupDataTimer(){
 
     timer_start(this->timer_group, this->timer_idx);
 }
+
+// =============================================================================================================
+// =============================================================================================================
