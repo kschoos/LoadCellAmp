@@ -25,7 +25,7 @@ class LoadCellAmp : LoadCellAmpCommon<gpio_num_t>{
 
   timer_group_t timer_group;
   timer_idx_t timer_idx;
-  uint32_t timer_counter;
+  volatile uint32_t timer_counter;
 
   void setupGPIO();
 
