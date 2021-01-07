@@ -1,0 +1,3 @@
+clang
+%h -x c++-header
+-I/home/skusku/Documents/projects/robotics/load_cell_amp/src/common/include
