@@ -21,7 +21,7 @@ void LoadCellAmp::init(timer_group_t timer_group, timer_idx_t timer_idx){
   this->timer_idx = timer_idx;
 
   setupGPIO();
-  setupDataTimer();
+  setupClkTimer();
 }
 
 inline void LoadCellAmp::toggleClkOutput(){
@@ -31,7 +31,7 @@ inline void LoadCellAmp::toggleClkOutput(){
 // ISR Setup ===================================================================================================
 // =============================================================================================================
 
-static void IRAM_ATTR dataISR(void* params){
+static void IRAM_ATTR clkISR(void* params){
   LoadCellAmp *that = static_cast<LoadCellAmp*>(params);
   that->toggleClkOutput();
 	that->timer_counter += 1;
@@ -56,23 +56,22 @@ void LoadCellAmp::setupGPIO(){
   gpio_config(&io_conf);
 } 
 
-void LoadCellAmp::setupDataTimer(){
+void LoadCellAmp::setupClkTimer(){
     timer_config_t config = {
         .alarm_en = TIMER_ALARM_EN,
         .counter_en = TIMER_PAUSE,
         .counter_dir = TIMER_COUNT_UP,
         .auto_reload = TIMER_AUTORELOAD_EN,
-        .divider = this->DATA_TIMER_DIVIDER,
+        .divider = this->CLK_TIMER_DIVIDER,
     };
 
     timer_init(this->timer_group, this->timer_idx, &config);
     timer_set_counter_value(this->timer_group, this->timer_idx, 0);
-    timer_set_alarm_value(this->timer_group, this->timer_idx, this->DATA_TIMER_ALARM_VALUE);
+    timer_set_alarm_value(this->timer_group, this->timer_idx, this->CLK_TIMER_ALARM_VALUE);
     timer_enable_intr(this->timer_group, this->timer_idx);
-    timer_isr_register(this->timer_group, this->timer_idx, dataISR, (void*)this, ESP_INTR_FLAG_IRAM, NULL);
+    timer_isr_register(this->timer_group, this->timer_idx, clkISR, (void*)this, ESP_INTR_FLAG_IRAM, NULL);
 
     timer_start(this->timer_group, this->timer_idx);
 }
 
-// =============================================================================================================
 // =============================================================================================================

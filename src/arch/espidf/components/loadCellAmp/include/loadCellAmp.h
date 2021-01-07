@@ -4,7 +4,7 @@
 #include <driver/timer.h>
 
 // We have to declare this static here so that we can declare it as 'friend' inside the class definition.
-static void IRAM_ATTR dataISR(void *that);
+static void IRAM_ATTR clkISR(void *that);
 
 class LoadCellAmp : LoadCellAmpCommon<gpio_num_t>{
 
@@ -20,8 +20,8 @@ class LoadCellAmp : LoadCellAmpCommon<gpio_num_t>{
   private: 
   // TODO: Make this settable via menuconfig. Maybe even divise
   // a simple constexpr function so we can enter a frequency and get the appropriate divider / alarm value pair.
-  const uint32_t DATA_TIMER_DIVIDER = 800;
-  const uint64_t DATA_TIMER_ALARM_VALUE = 1;
+  const uint32_t CLK_TIMER_DIVIDER = 1600;
+  const uint64_t CLK_TIMER_ALARM_VALUE = 1;
 
   timer_group_t timer_group;
   timer_idx_t timer_idx;
@@ -29,10 +29,10 @@ class LoadCellAmp : LoadCellAmpCommon<gpio_num_t>{
 
   void setupGPIO();
 
-  void setupDataTimer();
+  void setupClkTimer();
   void setupDataInterrupt();
   void init(timer_group_t timer_group, timer_idx_t timer_idx);
   inline void toggleClkOutput();
 
-  friend void IRAM_ATTR dataISR(void *that);
+  friend void IRAM_ATTR clkISR(void *that);
 };
