@@ -1,3 +1,6 @@
+#ifndef LOAD_CELL_AMP_H
+#define LOAD_CELL_AMP_H
+
 #include <driver/gpio.h>
 #include <esp_types.h>
 #include <loadCellAmpCommon.h>
@@ -17,6 +20,7 @@ class LoadCellAmp : LoadCellAmpCommon<gpio_num_t>{
       timer_group_t timer_group,
       timer_idx_t timer_idx);
 
+	virtual ~LoadCellAmp();
 
   private: 
   // TODO: Make this settable via menuconfig. Maybe even divise
@@ -38,3 +42,5 @@ class LoadCellAmp : LoadCellAmpCommon<gpio_num_t>{
   friend void IRAM_ATTR dataISR(void *that);
   friend void IRAM_ATTR clkISR(void *that);
 };
+
+#endif

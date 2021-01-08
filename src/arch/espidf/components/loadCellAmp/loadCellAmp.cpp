@@ -1,5 +1,5 @@
 #include "include/loadCellAmp.h"
-
+// TODO: Error checks for all the esp-related functions.
 
 // Constructors ================================================================================================
 // =============================================================================================================
@@ -13,6 +13,19 @@ LoadCellAmp::LoadCellAmp(gpio_num_t dout_pin,
     timer_idx_t timer_idx) : LoadCellAmpCommon<gpio_num_t>(dout_pin, sp_clk_pin) {
   init(timer_group, timer_idx);
 };
+// Destructors =================================================================================================
+// =============================================================================================================
+
+LoadCellAmp::~LoadCellAmp(){
+	timer_disable_intr(this->timer_group, this->timer_idx);
+	timer_deinit(this->timer_group, this->timer_idx);
+
+	gpio_intr_disable(this->dout_pin);
+	gpio_isr_handler_remove(this->dout_pin);
+	gpio_reset_pin(this->dout_pin);
+	gpio_reset_pin(this->sp_clk_pin);
+}
+
 // Private Members  ============================================================================================
 // =============================================================================================================
 
@@ -47,6 +60,7 @@ static void IRAM_ATTR dataISR(void* params){
 // Hardware Setup ==============================================================================================
 // =============================================================================================================
 void LoadCellAmp::setupGPIO(){
+	printf("Setting up GPIOs...\n");
   gpio_config_t io_conf;
 
   // SP_CLK GPIO
@@ -58,7 +72,8 @@ void LoadCellAmp::setupGPIO(){
   io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
   io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
 
-  gpio_config(&io_conf);
+  esp_err_t err = gpio_config(&io_conf);
+
 
   // Data GPIO
   uint64_t input_mask = 1 << this->dout_pin; 
@@ -76,9 +91,11 @@ void LoadCellAmp::setupGPIO(){
   // After that we will enable it again. (ESP_INTR_FLAG_INTRDISABLED)
   gpio_install_isr_service( ESP_INTR_FLAG_INTRDISABLED | ESP_INTR_FLAG_EDGE | ESP_INTR_FLAG_LEVEL1 ) ;
   gpio_isr_handler_add(this->dout_pin, dataISR, 0);
+	printf("GPIOs set up.\n");
 } 
 
 void LoadCellAmp::setupClkTimer(){
+	printf("Setting up Timer...\n");
     timer_config_t config = {
         .alarm_en = TIMER_ALARM_EN,
         .counter_en = TIMER_PAUSE,
@@ -94,6 +111,7 @@ void LoadCellAmp::setupClkTimer(){
     timer_isr_register(this->timer_group, this->timer_idx, clkISR, (void*)this, ESP_INTR_FLAG_IRAM, NULL);
 
     timer_start(this->timer_group, this->timer_idx);
+	printf("Done setting up timer.\n");
 }
 
 // =============================================================================================================
