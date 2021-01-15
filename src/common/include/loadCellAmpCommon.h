@@ -5,6 +5,7 @@ class LoadCellAmpCommon{
   protected:
     GPIO_TYPE dout_pin;
     GPIO_TYPE sp_clk_pin;
+    uint8_t n_pulses = 27;
 
   private:
     uint8_t counter = 0;
@@ -33,10 +34,6 @@ class LoadCellAmpCommon{
     }
 
     void isrNewValue(uint8_t value){
-      if(counter == 24){
-        return;
-      }
-
       this->currentValue = (this->currentValue << 1) + value;
       this->counter++;
     }
