@@ -3,28 +3,41 @@
 
 // Constructors ================================================================================================
 // =============================================================================================================
-LoadCellAmp::LoadCellAmp(gpio_num_t dout_pin, gpio_num_t sp_clk_pin) : LoadCellAmpCommon<gpio_num_t>(dout_pin, sp_clk_pin) {
+LoadCellAmp::LoadCellAmp(gpio_num_t dout_pin, gpio_num_t sp_clk_pin) : LoadCellAmpCommon<gpio_num_t>(dout_pin, sp_clk_pin, AmpGain::gain128) {
   init(TIMER_GROUP_0, TIMER_0);
 };
 
 LoadCellAmp::LoadCellAmp(gpio_num_t dout_pin, 
     gpio_num_t sp_clk_pin, 
     timer_group_t timer_group,
-    timer_idx_t timer_idx) : LoadCellAmpCommon<gpio_num_t>(dout_pin, sp_clk_pin) {
+    timer_idx_t timer_idx) : LoadCellAmpCommon<gpio_num_t>(dout_pin, sp_clk_pin, AmpGain::gain128) {
+  init(timer_group, timer_idx);
+};
+
+LoadCellAmp::LoadCellAmp(gpio_num_t dout_pin, 
+    gpio_num_t sp_clk_pin, 
+    timer_group_t timer_group,
+    timer_idx_t timer_idx,
+    AmpGain gain
+    ) : LoadCellAmpCommon<gpio_num_t>(dout_pin, sp_clk_pin, gain) {
   init(timer_group, timer_idx);
 };
 // Destructors =================================================================================================
 // =============================================================================================================
 
 LoadCellAmp::~LoadCellAmp(){
-  timer_pause(this->timer_group, this->timer_idx);
+	gpio_intr_disable(this->dout_pin);
 	timer_disable_intr(this->timer_group, this->timer_idx);
+
+  timer_pause(this->timer_group, this->timer_idx);
 	timer_deinit(this->timer_group, this->timer_idx);
 
-	gpio_intr_disable(this->dout_pin);
 	gpio_isr_handler_remove(this->dout_pin);
 	gpio_reset_pin(this->dout_pin);
 	gpio_reset_pin(this->sp_clk_pin);
+
+  gpio_set_level(GPIO_NUM_25, 1);
+  gpio_set_level(GPIO_NUM_25, 0);
 }
 
 // Private Members  ============================================================================================
@@ -36,6 +49,9 @@ void LoadCellAmp::init(timer_group_t timer_group, timer_idx_t timer_idx){
 
   setupGPIO();
   setupClkTimer();
+
+  gpio_set_level(GPIO_NUM_25, 1);
+  gpio_set_level(GPIO_NUM_25, 0);
 }
 
 inline void LoadCellAmp::toggleClkOutput(){
@@ -53,14 +69,11 @@ static bool IRAM_ATTR clkISR(void* params){
 
   if((that->timer_counter & 3) == 3){
     that->isrNewValue(static_cast<uint8_t>(gpio_get_level(that->dout_pin)));
-    gpio_set_level(GPIO_NUM_25, 1); 
-    gpio_set_level(GPIO_NUM_25, 0);
   }
 
   if(that->timer_counter / 4 == that->n_pulses){
-    if(!that->oneshot){
-      gpio_intr_enable(that->dout_pin);
-    }
+     gpio_intr_enable(that->dout_pin);
+     that->timer_counter = 0;
 
      timer_pause(that->timer_group, that->timer_idx);
      that->isrDataReady();
@@ -74,6 +87,7 @@ static bool IRAM_ATTR clkISR(void* params){
 // Whenever we arent reading and receive a negative edge, data is available
 static void IRAM_ATTR dataISR(void* params){
   LoadCellAmp *that = static_cast<LoadCellAmp*>(params);
+
 
 	timer_group_enable_alarm_in_isr(that->timer_group, that->timer_idx);
   timer_enable_intr(that->timer_group, that->timer_idx);
@@ -89,7 +103,7 @@ void LoadCellAmp::setupGPIO(){
   gpio_config_t io_conf;
 
   // SP_CLK GPIO
-  uint64_t output_mask = (1 << this->sp_clk_pin) | (1 << GPIO_NUM_25); 
+  uint64_t output_mask = (1 << this->sp_clk_pin) | (1 << GPIO_NUM_25);
 
   io_conf.intr_type= GPIO_INTR_DISABLE;
   io_conf.mode = GPIO_MODE_OUTPUT;
@@ -115,6 +129,7 @@ void LoadCellAmp::setupGPIO(){
   // We want to disable the interrupt for this after it is triggered for as long as we are reading data.
   // After that we will enable it again. (ESP_INTR_FLAG_INTRDISABLED)
   gpio_install_isr_service(0);// ESP_INTR_FLAG_INTRDISABLED | ESP_INTR_FLAG_EDGE | ESP_INTR_FLAG_LEVEL1 ) ;
+  printf("This: %p\n", this);
   gpio_isr_handler_add(this->dout_pin, dataISR, (void*)this);
 	printf("GPIOs set up.\n");
 } 

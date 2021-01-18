@@ -9,6 +9,7 @@
 // We have to declare this static here so that we can declare it as 'friend' inside the class definition.
 static void IRAM_ATTR dataISR(void *that);
 static bool IRAM_ATTR clkISR(void *that);
+enum class AmpGain;
 
 class LoadCellAmp : public LoadCellAmpCommon<gpio_num_t>{
 
@@ -21,6 +22,12 @@ class LoadCellAmp : public LoadCellAmpCommon<gpio_num_t>{
       gpio_num_t sp_clk_pin, 
       timer_group_t timer_group,
       timer_idx_t timer_idx);
+
+  LoadCellAmp(gpio_num_t dout_pin, 
+      gpio_num_t sp_clk_pin, 
+      timer_group_t timer_group,
+      timer_idx_t timer_idx,
+      AmpGain gain);
 
 	virtual ~LoadCellAmp();
 

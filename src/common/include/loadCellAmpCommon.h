@@ -12,19 +12,27 @@ class LoadCellAmpCommon{
     int32_t latestValue = 0;
     uint32_t currentValue = 0;
 
-  public:
-    void init(
-        GPIO_TYPE dout_pin, 
-        GPIO_TYPE sp_clk_pin){
-      this->dout_pin = dout_pin;
-      this->sp_clk_pin = sp_clk_pin;
-    }
-
     LoadCellAmpCommon(){
     }
 
-    LoadCellAmpCommon(GPIO_TYPE dout_pin, GPIO_TYPE sp_clk_pin){
-      init(dout_pin, sp_clk_pin);
+  public:
+    enum class AmpGain{
+      gain128,
+      gain64
+    };
+
+    void init(
+        GPIO_TYPE dout_pin, 
+        GPIO_TYPE sp_clk_pin,
+        AmpGain gain){
+      this->dout_pin = dout_pin;
+      this->sp_clk_pin = sp_clk_pin;
+      this->n_pulses = (gain == AmpGain::gain128 ? 25 : 27);
+    }
+
+
+    LoadCellAmpCommon(GPIO_TYPE dout_pin, GPIO_TYPE sp_clk_pin, AmpGain gain) : counter(0), latestValue(0), currentValue(0){
+      init(dout_pin, sp_clk_pin, gain);
     }
 
     void isrDataReady(){

@@ -215,8 +215,8 @@ TEST_CASE("Data should be correct", ""){
 }
 
 static void simple_integration_test_data_should_not_be_zero_impl(){
-  LoadCellAmp loadCellAmp(GPIO_NUM_16, GPIO_NUM_17);
-  loadCellAmp.oneshot = true;
+  static LoadCellAmp loadCellAmp(GPIO_NUM_16, GPIO_NUM_17);
+  // loadCellAmp.oneshot = true;
 
   ticksMeasured = 0;
 
