@@ -51,11 +51,17 @@ static bool IRAM_ATTR clkISR(void* params){
 	that->timer_counter += 1;
   that->toggleClkOutput();
 
-  if(that->timer_counter & 3){
+  if((that->timer_counter & 3) == 3){
     that->isrNewValue(static_cast<uint8_t>(gpio_get_level(that->dout_pin)));
+    gpio_set_level(GPIO_NUM_25, 1); 
+    gpio_set_level(GPIO_NUM_25, 0);
   }
 
   if(that->timer_counter / 4 == that->n_pulses){
+    if(!that->oneshot){
+      gpio_intr_enable(that->dout_pin);
+    }
+
      timer_pause(that->timer_group, that->timer_idx);
      that->isrDataReady();
   }
@@ -72,6 +78,8 @@ static void IRAM_ATTR dataISR(void* params){
 	timer_group_enable_alarm_in_isr(that->timer_group, that->timer_idx);
   timer_enable_intr(that->timer_group, that->timer_idx);
   timer_start(that->timer_group, that->timer_idx);
+
+  gpio_intr_disable(that->dout_pin);
 }
 
 // Hardware Setup ==============================================================================================
@@ -81,12 +89,12 @@ void LoadCellAmp::setupGPIO(){
   gpio_config_t io_conf;
 
   // SP_CLK GPIO
-  uint64_t output_mask = (1 << this->sp_clk_pin);// | (1 << GPIO_NUM_15); 
+  uint64_t output_mask = (1 << this->sp_clk_pin) | (1 << GPIO_NUM_25); 
 
   io_conf.intr_type= GPIO_INTR_DISABLE;
   io_conf.mode = GPIO_MODE_OUTPUT;
   io_conf.pin_bit_mask = output_mask;
-  io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
+  io_conf.pull_down_en = GPIO_PULLDOWN_ENABLE;
   io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
 
   esp_err_t err = gpio_config(&io_conf);

@@ -144,7 +144,7 @@ static void task_data_should_be_correct(void* p){
 
   gpio_set_level(arg->dout_pin, 1);
 
-  vTaskDelay(500 / portTICK_PERIOD_MS);
+  vTaskDelay(1000 / portTICK_PERIOD_MS);
 
 
   xSemaphoreGive(arg->sem);
@@ -189,7 +189,58 @@ static void test_data_should_be_correct_impl(){
   vSemaphoreDelete(arg.sem);
 }
 
+static void task_integration_test(void* p){
+  task_test_pulldown_t* arg = static_cast<task_test_pulldown_t*>(p);
+
+  // printf("\nTicks measured: %d\n", ticksMeasured);
+  TEST_ASSERT_MESSAGE(ticksMeasured == 0, MESSAGE(Ticks should be 0)); 
+
+  // vTaskDelay(1);
+  gpio_set_level(arg->dout_pin, 0);
+  
+  // vTaskDelay(1);
+
+  gpio_set_level(arg->dout_pin, 1);
+
+  vTaskDelay(200 / portTICK_PERIOD_MS);
+
+
+  xSemaphoreGive(arg->sem);
+  vTaskDelete(NULL);
+}
+
 
 TEST_CASE("Data should be correct", ""){
   test_data_should_be_correct_impl();
+}
+
+static void simple_integration_test_data_should_not_be_zero_impl(){
+  LoadCellAmp loadCellAmp(GPIO_NUM_16, GPIO_NUM_17);
+  loadCellAmp.oneshot = true;
+
+  ticksMeasured = 0;
+
+  const gpio_num_t DATA_OUT_PIN = GPIO_NUM_18;
+  const gpio_num_t CLK_IN_PIN   = GPIO_NUM_19;
+
+  setupGPIO(DATA_OUT_PIN, CLK_IN_PIN);
+  gpio_set_level(DATA_OUT_PIN, 1);
+
+  const task_test_pulldown_t arg = {
+    .sem = xSemaphoreCreateBinary(),
+    .dout_pin = DATA_OUT_PIN,
+    .clk_in_pin = CLK_IN_PIN
+  };
+
+  xTaskCreate(task_integration_test, "", 2048, (void*) &arg, 3, 0);
+  TEST_ASSERT(xSemaphoreTake(arg.sem, 400 / portTICK_PERIOD_MS));
+
+  printf("\nValue: %x\n", loadCellAmp.getLatestReading());
+  TEST_ASSERT_MESSAGE(loadCellAmp.getLatestReading() != 0x0, MESSAGE(Value should not be 0x0));
+
+  vSemaphoreDelete(arg.sem);
+}
+
+TEST_CASE("Integration test: Wire the amp: DAT - Pin16, CLK - Pin17, rest obvious.", ""){
+  simple_integration_test_data_should_not_be_zero_impl();
 }
