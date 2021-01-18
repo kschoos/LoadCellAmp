@@ -1,8 +1,5 @@
 #include "include/loadCellAmp.h"
 // TODO: Error checks for all the esp-related functions.
-// TODO: When the dataISR is triggered, the timer should start running
-// TODO: The clk divider could be twice as large. A complete period takes 4 alarms (0, 1, 2, 3). 
-//			 We toggle on alarm == 0, 2. We measure on alarm == 3
 
 // Constructors ================================================================================================
 // =============================================================================================================
@@ -42,7 +39,7 @@ void LoadCellAmp::init(timer_group_t timer_group, timer_idx_t timer_idx){
 }
 
 inline void LoadCellAmp::toggleClkOutput(){
-  gpio_set_level(this->sp_clk_pin, (this->timer_counter >> 1) & 1);
+  gpio_set_level(this->sp_clk_pin, this->timer_counter & 2); // Toggle based on 2nd bit
 }
 
 // ISR Setup ===================================================================================================
@@ -63,17 +60,7 @@ static bool IRAM_ATTR clkISR(void* params){
      that->isrDataReady();
   }
 
-
-	//timer_group_enable_alarm_in_isr(that->timer_group, that->timer_idx);
-  
-   // test += 1;
-   // if(test >= 27){
-   //   timer_pause(TIMER_GROUP_0, TIMER_0);
-   // }
-
   timer_group_enable_alarm_in_isr(that->timer_group, that->timer_idx);
-  // gpio_set_level(GPIO_NUM_17, test % 2);
-
 
   return false;
 }
@@ -81,8 +68,6 @@ static bool IRAM_ATTR clkISR(void* params){
 // Whenever we arent reading and receive a negative edge, data is available
 static void IRAM_ATTR dataISR(void* params){
   LoadCellAmp *that = static_cast<LoadCellAmp*>(params);
-
-  // gpio_set_level(GPIO_NUM_15, 1);
 
 	timer_group_enable_alarm_in_isr(that->timer_group, that->timer_idx);
   timer_enable_intr(that->timer_group, that->timer_idx);
