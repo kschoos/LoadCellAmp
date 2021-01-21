@@ -1,5 +1,11 @@
 # Sparkfun Load Cell Amp Firmware
 
+## How to build tests
+### espidf
+esp-idf must be installed and $IDF_PATH must be set (source ~/esp/esp-idf/exports.sh or similar) 
+Then just run make espidftest
+
+
 ## Datasheet
 
 https://cdn.sparkfun.com/assets/b/f/5/a/e/hx711F_EN.pdf
@@ -33,14 +39,15 @@ This is the Datasheet for the particular IC that is used on the Sparkfun Load-Ce
 
 ### Checklist:
 - [x] Connect Load-Cell to Amp, Connect Voltage source, Measure output with LA 
-- [ ] Write tests for LoadCellAmp class implementation
-- [ ] Implement class LoadCellAmp
-- [ ] Write tests for init function
-- [ ] Implement constructor, destructor and init function
-- [ ] Write tests for getReading function
-- [ ] Implement getReading function
-- [ ] Write tests for interrupts
-- [ ] Implement interrupts
+- [x] Write tests for LoadCellAmp class implementation
+- [x] Implement class LoadCellAmp
+- [x] Write tests for init function
+- [x] Implement constructor, destructor and init function
+- [x] Write tests for getReading function
+- [x] Implement getReading function
+- [x] Write tests for interrupts
+- [x] Implement interrupts
+- [ ] Write a test application to demonstrate proper functionality
 
 ### Testresults:
 - The frequency at which new datapoints arrive is 11.85Hz rather than 10Hz. This may be due to the fact that we are using 3.3V instead of 5V
