@@ -1,0 +1,6 @@
+clang
+%h -x c++-header
+-I/home/skusku/Documents/projects/robotics/load_cell_amp/src/common/include/
+-I/home/skusku/esp/esp-idf/components/driver/include/
+-I/home/skusku/esp/esp-idf/components/esp_common/include/
+-I/home/skusku/esp/esp-idf/components/hal/include/
