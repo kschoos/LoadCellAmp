@@ -26,15 +26,15 @@ LoadCellAmp::LoadCellAmp(gpio_num_t dout_pin,
 // =============================================================================================================
 
 LoadCellAmp::~LoadCellAmp(){
-	gpio_intr_disable(this->dout_pin);
+	gpio_intr_disable(this->getDoutPin());
 	timer_disable_intr(this->timer_group, this->timer_idx);
 
   timer_pause(this->timer_group, this->timer_idx);
 	timer_deinit(this->timer_group, this->timer_idx);
 
-	gpio_isr_handler_remove(this->dout_pin);
-	gpio_reset_pin(this->dout_pin);
-	gpio_reset_pin(this->sp_clk_pin);
+	gpio_isr_handler_remove(this->getDoutPin());
+	gpio_reset_pin(this->getDoutPin());
+	gpio_reset_pin(this->getSPClkPin());
 
   gpio_set_level(GPIO_NUM_25, 1);
   gpio_set_level(GPIO_NUM_25, 0);
@@ -55,7 +55,7 @@ void LoadCellAmp::init(timer_group_t timer_group, timer_idx_t timer_idx){
 }
 
 inline void LoadCellAmp::toggleClkOutput(){
-  gpio_set_level(this->sp_clk_pin, this->timer_counter & 2); // Toggle based on 2nd bit
+  gpio_set_level(this->getSPClkPin(), this->timer_counter & 2); // Toggle based on 2nd bit
 }
 
 // ISR Setup ===================================================================================================
@@ -68,11 +68,11 @@ static bool IRAM_ATTR clkISR(void* params){
   that->toggleClkOutput();
 
   if((that->timer_counter & 3) == 3){
-    that->isrNewValue(static_cast<uint8_t>(gpio_get_level(that->dout_pin)));
+    that->isrNewValue(static_cast<uint8_t>(gpio_get_level(that->getDoutPin())));
   }
 
-  if(that->timer_counter / 4 == that->n_pulses){
-     gpio_intr_enable(that->dout_pin);
+  if(that->timer_counter / 4 == that->getNumPulses()){
+     gpio_intr_enable(that->getDoutPin());
      that->timer_counter = 0;
 
      timer_pause(that->timer_group, that->timer_idx);
@@ -93,7 +93,7 @@ static void IRAM_ATTR dataISR(void* params){
   timer_enable_intr(that->timer_group, that->timer_idx);
   timer_start(that->timer_group, that->timer_idx);
 
-  gpio_intr_disable(that->dout_pin);
+  gpio_intr_disable(that->getDoutPin());
 }
 
 // Hardware Setup ==============================================================================================
@@ -103,7 +103,7 @@ void LoadCellAmp::setupGPIO(){
   gpio_config_t io_conf;
 
   // SP_CLK GPIO
-  uint64_t output_mask = (1 << this->sp_clk_pin) | (1 << GPIO_NUM_25);
+  uint64_t output_mask = (1 << this->getSPClkPin()) | (1 << GPIO_NUM_25);
 
   io_conf.intr_type= GPIO_INTR_DISABLE;
   io_conf.mode = GPIO_MODE_OUTPUT;
@@ -115,7 +115,7 @@ void LoadCellAmp::setupGPIO(){
 
 
   // Data GPIO
-  uint64_t input_mask = 1 << this->dout_pin; 
+  uint64_t input_mask = 1 << this->getDoutPin(); 
   
   io_conf.intr_type = GPIO_INTR_NEGEDGE;
   io_conf.mode = GPIO_MODE_INPUT;
@@ -130,7 +130,7 @@ void LoadCellAmp::setupGPIO(){
   // After that we will enable it again. (ESP_INTR_FLAG_INTRDISABLED)
   gpio_install_isr_service(0);// ESP_INTR_FLAG_INTRDISABLED | ESP_INTR_FLAG_EDGE | ESP_INTR_FLAG_LEVEL1 ) ;
   printf("This: %p\n", this);
-  gpio_isr_handler_add(this->dout_pin, dataISR, (void*)this);
+  gpio_isr_handler_add(this->getDoutPin(), dataISR, (void*)this);
 	printf("GPIOs set up.\n");
 } 
 
