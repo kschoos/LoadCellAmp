@@ -7,9 +7,6 @@
 #include <driver/timer.h>
 #include <esp_err.h>
 
-// We have to declare this static here so that we can declare it as 'friend' inside the class definition.
-// static void IRAM_ATTR dataISR(void *that);
-// static bool IRAM_ATTR clkISR(void *that);
 enum class AmpGain;
 
 class LoadCellAmp : public LoadCellAmpCommon<gpio_num_t>{
