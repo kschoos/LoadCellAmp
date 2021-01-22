@@ -25,6 +25,8 @@ LoadCellAmp::LoadCellAmp(const gpio_num_t dout_pin,
 // =============================================================================================================
 
 LoadCellAmp::~LoadCellAmp(){
+  // Don't uninstall the isr_service, it may be used by others!
+
 	ESP_ERROR_CHECK(gpio_intr_disable(this->getDoutPin()));
 	ESP_ERROR_CHECK(timer_disable_intr(this->timer_group, this->timer_idx));
 
@@ -50,7 +52,7 @@ inline void LoadCellAmp::toggleClkOutput(){
 
 // ISR Setup ===================================================================================================
 // =============================================================================================================
-static bool IRAM_ATTR clkISR(void* params){
+bool IRAM_ATTR LoadCellAmp::clkISR(void* params){
   LoadCellAmp *that = static_cast<LoadCellAmp*>(params);
 	that->timer_counter += 1;
   that->toggleClkOutput();
@@ -73,7 +75,7 @@ static bool IRAM_ATTR clkISR(void* params){
 }
 
 // Whenever we arent reading and receive a negative edge, data is available
-static void IRAM_ATTR dataISR(void* params){
+void IRAM_ATTR LoadCellAmp::dataISR(void* params){
   LoadCellAmp *that = static_cast<LoadCellAmp*>(params);
 
 	timer_group_enable_alarm_in_isr(that->timer_group, that->timer_idx);
@@ -123,7 +125,7 @@ void LoadCellAmp::setupGPIO(){
         break;
   }
 
-  ESP_ERROR_CHECK(gpio_isr_handler_add(this->getDoutPin(), dataISR, (void*)this));
+  ESP_ERROR_CHECK(gpio_isr_handler_add(this->getDoutPin(), LoadCellAmp::dataISR, (void*)this));
 	printf("GPIOs set up.\n");
 } 
 
@@ -140,7 +142,7 @@ void LoadCellAmp::setupClkTimer(){
     ESP_ERROR_CHECK(timer_init(this->timer_group, this->timer_idx, &config));
     ESP_ERROR_CHECK(timer_set_counter_value(this->timer_group, this->timer_idx, 0));
     ESP_ERROR_CHECK(timer_set_alarm_value(this->timer_group, this->timer_idx, this->CLK_TIMER_ALARM_VALUE));
-    ESP_ERROR_CHECK(timer_isr_callback_add(this->timer_group, this->timer_idx, clkISR, (void*)this, ESP_INTR_FLAG_IRAM));
+    ESP_ERROR_CHECK(timer_isr_callback_add(this->timer_group, this->timer_idx, LoadCellAmp::clkISR, (void*)this, ESP_INTR_FLAG_IRAM));
     ESP_ERROR_CHECK(timer_enable_intr(this->timer_group, this->timer_idx));
     //timer_isr_register(this->timer_group, this->timer_idx, clkISR, (void*)this, ESP_INTR_FLAG_IRAM, NULL);
 	  printf("Done setting up timer.\n");

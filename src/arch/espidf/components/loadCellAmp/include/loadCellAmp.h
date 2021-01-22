@@ -8,8 +8,8 @@
 #include <esp_err.h>
 
 // We have to declare this static here so that we can declare it as 'friend' inside the class definition.
-static void IRAM_ATTR dataISR(void *that);
-static bool IRAM_ATTR clkISR(void *that);
+// static void IRAM_ATTR dataISR(void *that);
+// static bool IRAM_ATTR clkISR(void *that);
 enum class AmpGain;
 
 class LoadCellAmp : public LoadCellAmpCommon<gpio_num_t>{
@@ -49,8 +49,8 @@ class LoadCellAmp : public LoadCellAmpCommon<gpio_num_t>{
   void init();
   inline void toggleClkOutput();
 
-  friend void IRAM_ATTR dataISR(void *that);
-  friend bool IRAM_ATTR clkISR(void *that);
+  static void IRAM_ATTR dataISR(void *that);
+  static bool IRAM_ATTR clkISR(void *that);
 };
 
 #endif
