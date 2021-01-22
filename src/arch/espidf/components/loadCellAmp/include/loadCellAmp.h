@@ -5,6 +5,7 @@
 #include <esp_types.h>
 #include <loadCellAmpCommon.h>
 #include <driver/timer.h>
+#include <esp_err.h>
 
 // We have to declare this static here so that we can declare it as 'friend' inside the class definition.
 static void IRAM_ATTR dataISR(void *that);
@@ -16,18 +17,18 @@ class LoadCellAmp : public LoadCellAmpCommon<gpio_num_t>{
   public:
   bool oneshot = false;
 
-  LoadCellAmp(gpio_num_t dout_pin, gpio_num_t sp_clk_pin);
+  LoadCellAmp(const gpio_num_t dout_pin,const gpio_num_t sp_clk_pin);
 
-  LoadCellAmp(gpio_num_t dout_pin, 
-      gpio_num_t sp_clk_pin, 
-      timer_group_t timer_group,
-      timer_idx_t timer_idx);
+  LoadCellAmp(const gpio_num_t dout_pin, 
+      const gpio_num_t sp_clk_pin, 
+      const timer_group_t timer_group,
+      const timer_idx_t timer_idx);
 
-  LoadCellAmp(gpio_num_t dout_pin, 
-      gpio_num_t sp_clk_pin, 
-      timer_group_t timer_group,
-      timer_idx_t timer_idx,
-      AmpGain gain);
+  LoadCellAmp(const gpio_num_t dout_pin, 
+      const gpio_num_t sp_clk_pin, 
+      const timer_group_t timer_group,
+      const timer_idx_t timer_idx,
+      const AmpGain gain);
 
 	virtual ~LoadCellAmp();
 
@@ -45,7 +46,7 @@ class LoadCellAmp : public LoadCellAmpCommon<gpio_num_t>{
 
   void setupClkTimer();
   void setupDataInterrupt();
-  void init(timer_group_t timer_group, timer_idx_t timer_idx);
+  void init();
   inline void toggleClkOutput();
 
   friend void IRAM_ATTR dataISR(void *that);

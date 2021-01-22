@@ -3,9 +3,9 @@
 template <class GPIO_TYPE>
 class LoadCellAmpCommon{
   protected:
-    GPIO_TYPE dout_pin;
-    GPIO_TYPE sp_clk_pin;
-    uint8_t n_pulses = 27;
+    const GPIO_TYPE dout_pin;
+    const GPIO_TYPE sp_clk_pin;
+    const uint8_t n_pulses = 27;
 
   private:
     uint8_t counter = 0;
@@ -21,18 +21,9 @@ class LoadCellAmpCommon{
       gain64
     };
 
-    void init(
-        GPIO_TYPE dout_pin, 
-        GPIO_TYPE sp_clk_pin,
-        AmpGain gain){
-      this->dout_pin = dout_pin;
-      this->sp_clk_pin = sp_clk_pin;
-      this->n_pulses = (gain == AmpGain::gain128 ? 25 : 27);
-    }
-
-
-    LoadCellAmpCommon(GPIO_TYPE dout_pin, GPIO_TYPE sp_clk_pin, AmpGain gain) : counter(0), latestValue(0), currentValue(0){
-      init(dout_pin, sp_clk_pin, gain);
+    LoadCellAmpCommon(const GPIO_TYPE dout_pin, const GPIO_TYPE sp_clk_pin, const AmpGain gain) : 
+      dout_pin(dout_pin), sp_clk_pin(sp_clk_pin), n_pulses(gain == AmpGain::gain128 ? 25 : 27),
+      counter(0), latestValue(0), currentValue(0){
     }
 
     void isrDataReady(){
@@ -50,12 +41,16 @@ class LoadCellAmpCommon{
       return this->latestValue;
     }
 
-    GPIO_TYPE getDoutPin(){
+    const GPIO_TYPE getDoutPin(){
       return this->dout_pin;
     }
 
-    GPIO_TYPE getSPClkPin(){
+    const GPIO_TYPE getSPClkPin(){
       return this->sp_clk_pin;
+    }
+
+    const uint8_t getNumPulses(){
+      return this->n_pulses;
     }
 
     uint8_t getCounterValue(){
