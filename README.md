@@ -47,7 +47,7 @@ This is the Datasheet for the particular IC that is used on the Sparkfun Load-Ce
 - [x] Implement getReading function
 - [x] Write tests for interrupts
 - [x] Implement interrupts
-- [ ] Write a test application to demonstrate proper functionality
+- [x] Write a test application to demonstrate proper functionality
 
 ### Testresults:
 - The frequency at which new datapoints arrive is 11.85Hz rather than 10Hz. This may be due to the fact that we are using 3.3V instead of 5V
